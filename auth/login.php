@@ -2,7 +2,9 @@
 session_start();
 require_once '../config/db.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+$message = "";
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
@@ -11,29 +13,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $stmt->fetch();
 
     if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['user'] = $user;
-        header("location: ../" . $user['role'] . "/dashboard.php");
-        exit;
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['role'] = $user['role'];
+        $_SESSION['email'] = $user['email'];
+        $message = "<p class='success'>Login successful! Welcome, " . htmlspecialchars($user['role']) . "</p>";
     } else {
-        echo "Invalid email or password.";
+        $message = "<p class='error'> Invalid email or password.</p>";
     }
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>login</title>
-    <link rel="stylesheet" href="style.css">
-    
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="stylesheet" href="../style.css">
 </head>
 <body>
+  <div class="form-box">
+    <h2>Login</h2>
+    <?php if (!empty($message)) echo $message; ?>
     <form method="POST">
-    <input type="email" name="email" placeholder="Email" required/>
-    <input type="password" name="password" placeholder="Password" required/>
-    <button type="submit">Login</button>
-</form>
-    
+      <input type="email" name="email" placeholder="Enter your email" required>
+      <input type="password" name="password" placeholder="Enter your password" required>
+      <button type="submit">Login</button>
+    </form>
+  </div>
 </body>
 </html>
