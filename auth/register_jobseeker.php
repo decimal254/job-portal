@@ -2,24 +2,42 @@
 require_once '../config/db.php';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $first = $_POST['first_name'];
-    $last = $_POST['last_name'];
-    $dob = $_POST['dob'];
-    $nationality = $_POST['nationality'];
-    $code = $_POST['country_code'];
-    $location = $_POST['location'];
-    $gender = $_POST['gender'];
-    $mobile = $_POST['mobile_number'];
-    $email = $_POST['email'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $role = 'jobseeker';
 
-    if ($first && $last && $dob && $nationality && $code && $location && $gender && $mobile && $email && $password) {
+    $first       = $_POST['first_name'];
+    $last        = $_POST['last_name'];
+    $dob         = $_POST['dob'];
+    $nationality = $_POST['nationality'];
+    $code        = $_POST['country_code'];
+    $location    = $_POST['location'];
+    $gender      = $_POST['gender'];
+    $mobile      = $_POST['mobile_number'];
+    $email       = $_POST['email'];
+    $password    = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $role        = 'jobseeker';
+
+
+    $qualification     = $_POST['qualification'];
+    $experience        = $_POST['experience'];
+    $current_function  = $_POST['current_function'];
+    $desired_function  = $_POST['desired_function'];
+    $availability      = $_POST['availability'];
+
+    if (
+        $first && $last && $dob && $nationality && $code && $location && $gender &&
+        $mobile && $email && $password && $qualification && $experience && 
+        $current_function && $desired_function && $availability
+    ) {
         try {
             $stmt = $pdo->prepare("INSERT INTO users
-                (first_name, last_name, dob, nationality, country_code, location, gender, mobile_number, email, password, role)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$first, $last, $dob, $nationality, $code, $location, $gender, $mobile, $email, $password, $role]);
+                (first_name, last_name, dob, nationality, country_code, location, gender, mobile_number, email, password, role,
+                 qualification, experience, current_function, desired_function, availability)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            
+            $stmt->execute([
+                $first, $last, $dob, $nationality, $code, $location, $gender,
+                $mobile, $email, $password, $role,
+                $qualification, $experience, $current_function, $desired_function, $availability
+            ]);
 
             echo "<div class='alert alert-success text-center'>Registration successful as a Job Seeker!</div>";
         } catch (PDOException $e) {
@@ -30,6 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -77,6 +96,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <option>American</option>
               <option>Chinese</option>
               <option>Swedish</option>
+              <option>Armenian</option>
+              <option>Albanian</option>
+              <option>Algerian</option>
             </select>
           </div>
 
@@ -88,6 +110,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <option value="+254">+254</option>
                 <option value="+256">+256</option>
                 <option value="+1">+1</option>
+                <option value="+61">+61</option>
               </select>
             </div>
             <div class="col-md-8 mb-3">
