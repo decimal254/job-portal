@@ -2,14 +2,18 @@
 require_once '../config/db.php';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+    
     $rep_first_name  = $_POST['rep_first_name'];
     $rep_last_name   = $_POST['rep_last_name'];
     $rep_email       = $_POST['rep_email'];
-    $country         = $_POST['country_code'];
+    $country_code    = $_POST['country_code'];
     $rep_phone       = $_POST['rep_phone'];
     $position        = $_POST['position'];
     $password        = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $role            = 'employer';
 
+    
     $company_name    = $_POST['company_name'];
     $company_location= $_POST['company_location'];
     $industry        = $_POST['industry'];
@@ -20,26 +24,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $contact_person  = $_POST['contact_person'];
     $notification_email = $_POST['notification_email'];
 
-    $role            = "employer";
-
     try {
+        
         $stmt = $pdo->prepare("INSERT INTO users 
-            (first_name, last_name, email, country_code, mobile_number, password, role, position,
-             company_name, company_location, industry, num_employees, employee_type, website, referral,
-             contact_person, notification_email)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([
-            $rep_first_name, $rep_last_name, $rep_email, $country, $rep_phone, $password, $role, $position,
-            $company_name, $company_location, $industry, $num_employees, $employee_type, $website, $referral,
-            $contact_person, $notification_email
-        ]);
+            (first_name, last_name, email, password, country_code, mobile_number, role, position) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$rep_first_name, $rep_last_name, $rep_email, $password, $country_code, $rep_phone, $role, $position]);
 
-        echo "<div class='alert alert-success text-center mt-3'>Employer Registration Successful!</div>";
+        $user_id = $pdo->lastInsertId();
+
+        
+        $stmt2 = $pdo->prepare("INSERT INTO employers 
+            (user_id, position, company_name, company_location, industry, num_employees, employee_type, website, referral, contact_person, notification_email) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt2->execute([$user_id, $position, $company_name, $company_location, $industry, $num_employees, $employee_type, $website, $referral, $contact_person, $notification_email]);
+
+        echo "<div class='alert alert-success text-center'>Employer Registration Successful!</div>";
+
     } catch (PDOException $e) {
-        echo "<div class='alert alert-danger text-center mt-3'>Error: " . $e->getMessage() . "</div>";
+        echo "<div class='alert alert-danger text-center'>Error: " . $e->getMessage() . "</div>";
     }
 }
 ?>
+
+
 
 
 
@@ -148,7 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
           <div class="mb-3">
             <label class="form-label">Website</label>
-            <input type="url" name="website" class="form-control" placeholder="https://example.com">
+            <input type="url" name="website" class="form-control" placeholder="website">
           </div>
 
           <div class="mb-3">

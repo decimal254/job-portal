@@ -3,6 +3,7 @@ require_once '../config/db.php';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+    
     $first       = $_POST['first_name'];
     $last        = $_POST['last_name'];
     $dob         = $_POST['dob'];
@@ -15,39 +16,37 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password    = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $role        = 'jobseeker';
 
+    
+    $qualification    = $_POST['qualification'];
+    $experience       = $_POST['experience'];
+    $current_function = $_POST['current_function'];
+    $desired_function = $_POST['desired_function'];
+    $availability     = $_POST['availability'];
 
-    $qualification     = $_POST['qualification'];
-    $experience        = $_POST['experience'];
-    $current_function  = $_POST['current_function'];
-    $desired_function  = $_POST['desired_function'];
-    $availability      = $_POST['availability'];
+    try {
+        
+        $stmt = $pdo->prepare("INSERT INTO users 
+            (first_name, last_name, email, password, country_code, mobile_number, role) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$first, $last, $email, $password, $code, $mobile, $role]);
 
-    if (
-        $first && $last && $dob && $nationality && $code && $location && $gender &&
-        $mobile && $email && $password && $qualification && $experience && 
-        $current_function && $desired_function && $availability
-    ) {
-        try {
-            $stmt = $pdo->prepare("INSERT INTO users
-                (first_name, last_name, dob, nationality, country_code, location, gender, mobile_number, email, password, role,
-                 qualification, experience, current_function, desired_function, availability)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            
-            $stmt->execute([
-                $first, $last, $dob, $nationality, $code, $location, $gender,
-                $mobile, $email, $password, $role,
-                $qualification, $experience, $current_function, $desired_function, $availability
-            ]);
+        $user_id = $pdo->lastInsertId(); 
 
-            echo "<div class='alert alert-success text-center'>Registration successful as a Job Seeker!</div>";
-        } catch (PDOException $e) {
-            echo "<div class='alert alert-danger text-center'>Error: " . $e->getMessage() . "</div>";
-        }
-    } else {
-        echo "<div class='alert alert-warning text-center'>All fields are required.</div>";
+        
+        $stmt2 = $pdo->prepare("INSERT INTO jobseekers 
+            (user_id, dob, nationality, location, gender, qualification, experience, current_function, desired_function, availability) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt2->execute([$user_id, $dob, $nationality, $location, $gender, $qualification, $experience, $current_function, $desired_function, $availability]);
+
+        echo "<div class='alert alert-success text-center'>Registration successful as a Job Seeker!</div>";
+
+    } catch (PDOException $e) {
+        echo "<div class='alert alert-danger text-center'>Error: " . $e->getMessage() . "</div>";
     }
 }
 ?>
+
+
 
 
 <!DOCTYPE html>
