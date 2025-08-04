@@ -1,50 +1,65 @@
 <?php
 require_once '../config/db.php';
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    $first       = $_POST['first_name'];
-    $last        = $_POST['last_name'];
-    $dob         = $_POST['dob'];
-    $nationality = $_POST['nationality'];
-    $code        = $_POST['country_code'];
-    $location    = $_POST['location'];
-    $gender      = $_POST['gender'];
-    $mobile      = $_POST['mobile_number'];
-    $email       = $_POST['email'];
-    $password    = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $role        = 'jobseeker';
+    $first            = $_POST['first_name'] ?? '';
+    $last             = $_POST['last_name'] ?? '';
+    $mobile           = $_POST['mobile_number'] ?? null;
+    $email            = $_POST['email'] ?? '';
+    $password         = password_hash($_POST['password'] ?? '', PASSWORD_DEFAULT);
+    $code             = $_POST['country_code'] ?? '';
+    $role             = 'jobseeker';
 
-    
-    $qualification    = $_POST['qualification'];
-    $experience       = $_POST['experience'];
-    $current_function = $_POST['current_function'];
-    $desired_function = $_POST['desired_function'];
-    $availability     = $_POST['availability'];
+    $qualification    = $_POST['qualification'] ?? '';
+    $experience       = $_POST['experience'] ?? '';
+    $current_function = $_POST['current_function'] ?? '';
+    $desired_function = $_POST['desired_function'] ?? '';
+    $availability     = $_POST['availability'] ?? '';
 
     try {
-        
-        $stmt = $pdo->prepare("INSERT INTO users 
-            (first_name, last_name, email, password, country_code, mobile_number, role) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$first, $last, $email, $password, $code, $mobile, $role]);
-
-        $user_id = $pdo->lastInsertId(); 
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         
-        $stmt2 = $pdo->prepare("INSERT INTO jobseekers 
-            (user_id, dob, nationality, location, gender, qualification, experience, current_function, desired_function, availability) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt2->execute([$user_id, $dob, $nationality, $location, $gender, $qualification, $experience, $current_function, $desired_function, $availability]);
+        $stmt = $pdo->prepare("
+            INSERT INTO users (
+                first_name, last_name, email, password,
+                country_code, mobile_number, role
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $first, $last, $email, $password, $code, $mobile, $role
+        ]);
 
-        echo "<div class='alert alert-success text-center'>Registration successful as a Job Seeker!</div>";
+        $user_id = $pdo->lastInsertId();
+
+        
+        $stmt2 = $pdo->prepare("
+            INSERT INTO job_seekers (
+                user_id, qualification, experience,
+                current_function, desired_function, availability
+            ) VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        $stmt2->execute([
+            $user_id, $qualification, $experience,
+            $current_function, $desired_function, $availability
+        ]);
+
+        echo "<div class='alert alert-success text-center'>
+                Registration successful as a Job Seeker!
+              </div>";
 
     } catch (PDOException $e) {
-        echo "<div class='alert alert-danger text-center'>Error: " . $e->getMessage() . "</div>";
+        echo "<div class='alert alert-danger text-center'>
+                Error: " . htmlspecialchars($e->getMessage()) . "
+              </div>";
     }
 }
 ?>
+
+
+
+
 
 <!DOCTYPE html>
 <html lang="en">
