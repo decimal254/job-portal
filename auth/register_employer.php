@@ -1,51 +1,79 @@
 <?php
 require_once '../config/db.php';
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    $rep_first_name  = $_POST['rep_first_name'];
-    $rep_last_name   = $_POST['rep_last_name'];
-    $rep_email       = $_POST['rep_email'];
-    $country_code    = $_POST['country_code'];
-    $rep_phone       = $_POST['rep_phone'];
-    $position        = $_POST['position'];
-    $password        = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $role            = 'employer';
+    $rep_first_name = $_POST['rep_first_name'] ?? '';
+    $rep_last_name  = $_POST['rep_last_name']  ?? '';
+    $rep_email      = $_POST['rep_email']      ?? '';
+    $country_code   = $_POST['country_code']   ?? '';
+    $rep_phone      = $_POST['rep_phone']      ?? '';
+    $position       = $_POST['position']       ?? '';
+    $password       = password_hash($_POST['password'] ?? '', PASSWORD_DEFAULT);
+    $role           = 'employer';
 
-    
-    $company_name    = $_POST['company_name'];
-    $company_location= $_POST['company_location'];
-    $industry        = $_POST['industry'];
-    $num_employees   = $_POST['num_employees'];
-    $employee_type   = $_POST['employee_type'];
-    $website         = $_POST['website'];
-    $referral        = $_POST['referral'];
-    $contact_person  = $_POST['contact_person'];
-    $notification_email = $_POST['notification_email'];
+    $company_name        = $_POST['company_name']        ?? '';
+    $company_location    = $_POST['company_location']    ?? '';
+    $industry            = $_POST['industry']            ?? '';
+    $num_employees       = is_numeric($_POST['num_employees'] ?? '') 
+                           ? (int) $_POST['num_employees'] : null;
+    $employee_type       = $_POST['employee_type']       ?? '';
+    $website             = $_POST['website']             ?? '';
+    $referral            = $_POST['referral']            ?? '';
+    $contact_person      = $_POST['contact_person']      ?? '';
+    $notification_email  = $_POST['notification_email']  ?? '';
+
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     try {
         
-        $stmt = $pdo->prepare("INSERT INTO users 
-            (first_name, last_name, email, password, country_code, mobile_number, role, position) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$rep_first_name, $rep_last_name, $rep_email, $password, $country_code, $rep_phone, $role, $position]);
-
+        $stmt = $pdo->prepare("
+            INSERT INTO users (
+                first_name, last_name, email, password,
+                country_code, mobile_number, role, position
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $rep_first_name, $rep_last_name, $rep_email, $password,
+            $country_code, $rep_phone, $role, $position
+        ]);
         $user_id = $pdo->lastInsertId();
 
         
-        $stmt2 = $pdo->prepare("INSERT INTO employers 
-            (user_id, position, company_name, company_location, industry, num_employees, employee_type, website, referral, contact_person, notification_email) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt2->execute([$user_id, $position, $company_name, $company_location, $industry, $num_employees, $employee_type, $website, $referral, $contact_person, $notification_email]);
+        $stmt2 = $pdo->prepare("
+            INSERT INTO job_employers (
+                user_id, company_name, company_location,
+                industry, num_employees, employee_type,
+                website, referral, contact_person, notification_email
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt2->execute([
+            $user_id,
+            $company_name, $company_location,
+            $industry, $num_employees, $employee_type,
+            $website, $referral, $contact_person, $notification_email
+        ]);
 
-        echo "<div class='alert alert-success text-center'>Employer Registration Successful!</div>";
+        echo "<div class='alert alert-success text-center'>
+                Employer Registration Successful!
+              </div>";
 
     } catch (PDOException $e) {
-        echo "<div class='alert alert-danger text-center'>Error: " . $e->getMessage() . "</div>";
+        
+        $errorCode = $e->errorInfo[1] ?? null;
+        if ($errorCode === 1062) {
+            echo "<div class='alert alert-danger text-center'>
+                    Duplicate entry detected: email or phone already in use.
+                  </div>";
+        } else {
+            echo "<div class='alert alert-danger text-center'>
+                    Registration failed: " . htmlspecialchars($e->getMessage()) . "
+                  </div>";
+        }
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

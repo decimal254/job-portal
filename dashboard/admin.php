@@ -3,21 +3,25 @@ session_start();
 require_once '../config/db.php';
 
 
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../auth/login.php");
+    exit();
+}
 
 
-$totalUsersStmt = $pdo->query("SELECT COUNT(*) FROM users");
-$totalUsers = $totalUsersStmt->fetchColumn();
+$adminName = $_SESSION['first_name'] ?? 'Admin';
 
 
-$totalJobsStmt = $pdo->query("SELECT COUNT(*) FROM jobs");
-$totalJobs = $totalJobsStmt->fetchColumn();
+try {
+    $totalUsers = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+    $totalJobs = $pdo->query("SELECT COUNT(*) FROM jobs")->fetchColumn();
+    $totalApplications = $pdo->query("SELECT COUNT(*) FROM job_applications")->fetchColumn();
 
-
-$totalAppsStmt = $pdo->query("SELECT COUNT(*) FROM job_applications");
-$totalApplications = $totalAppsStmt->fetchColumn();
-
-$usersStmt = $pdo->query("SELECT first_name, last_name, email, role FROM users ORDER BY user_id DESC LIMIT 5");
-$recentUsers = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $pdo->query("SELECT first_name, last_name, email, role FROM users ORDER BY user_id DESC LIMIT 5");
+    $recentUsers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Database error: " . htmlspecialchars($e->getMessage()));
+}
 ?>
 
 <!DOCTYPE html>
@@ -30,7 +34,12 @@ $recentUsers = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body class="bg-light">
 
-
+<div class="container mt-5">
+  
+  <div class="text-center mb-4">
+    <h2>Welcome, <?= htmlspecialchars($adminName) ?> (Admin)</h2>
+    <p class="text-muted">You are viewing the admin dashboard</p>
+  </div>
 
   
   <div class="row g-4 mb-5">
@@ -60,8 +69,8 @@ $recentUsers = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
   
   <h4 class="mb-3">Recent Users</h4>
   <div class="table-responsive">
-    <table class="table table-bordered table-striped">
-      <thead class="table-dark">
+    <table class="table table-dark table-striped">
+      <thead>
         <tr>
           <th>Name</th>
           <th>Email</th>
@@ -86,7 +95,7 @@ $recentUsers = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
     </table>
   </div>
 
- 
+  
   <div class="text-center mt-4">
     <a href="../auth/logout.php" class="btn btn-danger px-4">Logout</a>
   </div>
