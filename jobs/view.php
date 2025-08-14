@@ -63,9 +63,7 @@ if (!$job) {
                 <a href="apply.php?job_id=<?= $job['job_id'] ?>" class="btn btn-primary">Apply Now</a>
             </div>
         </div>
-        <div class="card-footer bg-white text-muted small">
-            Posted on <?= date("M d, Y", strtotime($job['posted_at'])) ?>
-        </div>
+
     </div>
 </div>
 
