@@ -31,20 +31,28 @@ $jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="row g-4">
         <?php if ($jobs): ?>
             <?php foreach ($jobs as $job): ?>
-                <div class="col-md-6">
-                    <div class="card shadow-sm border-0 rounded-4 h-100">
-                        <div class="card-body">
-                            <h5 class="card-title text-primary"><?= htmlspecialchars($job['title']) ?></h5>
-                            <p class="card-text text-muted mb-1">
-                                <strong>Company:</strong> <?= htmlspecialchars($job['first_name'] . ' ' . $job['last_name']) ?>
-                            </p>
-                            <p class="card-text text-muted mb-1">
-                                <strong>Location:</strong> <?= htmlspecialchars($job['location']) ?>
-                            </p>
-                            <p class="card-text">
-                                <?= htmlspecialchars(substr($job['description'], 0, 100)) ?>...
-                            </p>
-                            <a href="view.php?id=<?= $job['job_id'] ?>" class="btn btn-outline-primary btn-sm">View Details</a>
+                <div class="card mb-4 shadow-sm border-0 rounded-4">
+                    <div class="card-body">
+                        <h5 class="card-title"><?= htmlspecialchars($job['title']) ?></h5>
+                        <p class="card-text"><?= htmlspecialchars(substr($job['description'], 0, 100)) ?>...</p>
+                        <p class="text-muted mb-1">
+                            <strong>Company:</strong> <?= htmlspecialchars($job['first_name'] . ' ' . $job['last_name']) ?>
+                        </p>
+                        <p class="text-muted mb-3">
+                            <strong>Location:</strong> <?= htmlspecialchars($job['location']) ?>
+                        </p>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="view.php?id=<?= $job['job_id'] ?>" class="btn btn-info btn-sm rounded-3">View</a>
+
+                            <?php if (
+                                isset($_SESSION['role']) &&
+                                $_SESSION['role'] === 'employer' &&
+                                isset($_SESSION['user_id']) &&
+                                $_SESSION['user_id'] == $job['employer_id']
+                            ): ?>
+                                <a href="edit.php?id=<?= $job['job_id'] ?>" class="btn btn-warning btn-sm rounded-3">Edit</a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
