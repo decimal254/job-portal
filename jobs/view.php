@@ -2,24 +2,23 @@
 session_start();
 require_once '../config/db.php';
 
-$job_id = isset($_GET['job_id']) ? (int) $_GET['job_id'] : 0;
-if ($job_id <= 0) {
-    header('Location: index.php');
+
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    header("Location: index.php");
     exit;
 }
 
-$sql = "SELECT jobs.*, users.first_name, users.last_name, users.position
-         FROM jobs
-         JOIN users ON jobs.employer_id = users.user_id
-         WHERE jobs.job_id = ? AND jobs.is_active = 1
-         LIMIT 1";
-
+$job_id = $_GET['id'];
+$sql = "SELECT jobs.*, users.first_name, users.last_name, users.position 
+        FROM jobs 
+        JOIN users ON jobs.employer_id = users.user_id
+        WHERE jobs.job_id = ?";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$job_id]);
-$jobs = $stmt->fetch(PDO::FETCH_ASSOC);
+$job = $stmt->fetch(PDO::FETCH_ASSOC);
 
-IF (!$job) {
-    header('Location: index.php?error=JobNotFound');
+if (!$job) {
+    header("Location: index.php");
     exit;
 }
 ?>
@@ -28,39 +27,48 @@ IF (!$job) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Details</title>
+    <title><?= htmlspecialchars($job['title']) ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-    <div class="container py-5">
-        <a href="index.php" class="btn btn-outline-secondary mb-4">&larr; Back to jobs
-            <div class="card shadow-sm p-4 bg-white">
-                <h2 class="mb-3"><?=htmlspecialchars($job['title']) ?></h2>
-                <h5 class="text-muted mb-3"><?= htmlspecialchars($job['first_name'] . ' ' . $job['last_name']) ?> - <?= htmlspecialchars($job['position']) ?></h5>
-                 <p><strong>Location:</strong> <?=htmlspecialchars($job['Location']) ?></p>
-                 <p><strong>Category:</strong> <?=htmlspecialchars($job['Category']) ?></p>
-                 <p><strong>Job Type:</strong> <?= ucfirst(str_replace('_', ' ', $job['job_type'])) ?></p>
-                 <?php if (!empty($job['salary'])): ?>
-            <p><strong>Salary:</strong> <?= htmlspecialchars($job['salary']) ?></p>
-        <?php endif; ?>
-        <p><strong>Posted On:</strong> <?= date('F j, Y', strtotime($job['posted_at'])) ?></p>
 
-        <hr />
+<div class="container my-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+            <h2 class="card-title text-primary"><?= htmlspecialchars($job['title']) ?></h2>
+            <p class="text-muted mb-2">
+                <strong>Company:</strong> <?= htmlspecialchars($job['first_name'] . ' ' . $job['last_name']) ?>
+            </p>
+            <p class="text-muted mb-2">
+                <strong>Position:</strong> <?= htmlspecialchars($job['position']) ?>
+            </p>
+            <p class="text-muted mb-2">
+                <strong>Location:</strong> <?= htmlspecialchars($job['location']) ?>
+            </p>
+            <p class="text-muted mb-2">
+                <strong>Category:</strong> <?= htmlspecialchars($job['category']) ?>
+            </p>
+            <p class="text-muted mb-4">
+                <strong>Salary Range:</strong> <?= htmlspecialchars($job['salary_range']) ?>
+            </p>
 
-        <h4>Description</h4>
-        <p><?= nl2br(htmlspecialchars($job['description'])) ?></p>
+            <h5 class="fw-bold">Job Description</h5>
+            <p><?= nl2br(htmlspecialchars($job['description'])) ?></p>
 
-        <?php if (!empty($job['requirements'])): ?>
-            <h4>Requirements</h4>
+            <h5 class="fw-bold">Requirements</h5>
             <p><?= nl2br(htmlspecialchars($job['requirements'])) ?></p>
-        <?php endif; ?>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="index.php" class="btn btn-outline-secondary">Back to Jobs</a>
+                <a href="apply.php?job_id=<?= $job['job_id'] ?>" class="btn btn-primary">Apply Now</a>
+            </div>
+        </div>
+        <div class="card-footer bg-white text-muted small">
+            Posted on <?= date("M d, Y", strtotime($job['posted_at'])) ?>
+        </div>
     </div>
 </div>
-</body>
-</html>
-            </div>
-        </a>
-    </div>
-    
-</body>
-</html>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
