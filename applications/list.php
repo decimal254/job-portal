@@ -72,8 +72,6 @@ $applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             };
                                         ?>
                                         <span class="badge <?= $badgeClass ?>"><?= ucfirst($app['status']) ?></span>
-                                    </td>
-                                    <td><?= date('M d, Y', strtotime($app['applied_at'])) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
