@@ -60,7 +60,8 @@ if (!$job) {
 
             <div class="d-flex justify-content-between mt-4">
                 <a href="index.php" class="btn btn-outline-secondary">Back to Jobs</a>
-                <a href="apply.php?job_id=<?= $job['job_id'] ?>" class="btn btn-primary">Apply Now</a>
+                <a href="../applications/list.php?job_id=<?= $job['job_id'] ?>" class="btn btn-primary">Apply Now</a>
+
             </div>
         </div>
 

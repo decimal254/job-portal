@@ -44,17 +44,18 @@ try {
     </div>
 </nav>
 
-<header class="bg-primary text-white text-center py-5">
-    <div class="container">
-        <h1>Find Your Dream Job</h1>
-        <p>Search thousands of jobs from top companies</p>
-        <form class="d-flex justify-content-center mt-4" action="jobs/index.php" method="get">
-            <input type="text" name="title" class="form-control w-25 me-2" placeholder="Job title or Keyword">
-            <input type="text" name="location" class="form-control w-25 me-2" placeholder="Location">
-            <button class="btn btn-warning" type="submit">Search</button>
-        </form>
-    </div>
-</header>
+<form action="applications/search.php" method="get" class="row g-2">
+  <div class="col-md-5">
+    <input type="text" name="title" class="form-control" placeholder="Job title or keyword">
+  </div>
+  <div class="col-md-5">
+    <input type="text" name="location" class="form-control" placeholder="Location">
+  </div>
+  <div class="col-md-2">
+    <button type="submit" class="btn btn-primary w-100">Search</button>
+  </div>
+</form>
+
 
 <section id="featured-jobs" class="py-5">
     <div class="container">
