@@ -2,29 +2,36 @@
 session_start();
 require_once '../config/db.php';
 
-
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['role'])) {
     header("Location: ../auth/login.php");
     exit;
 }
 
-$employer_id = $_SESSION['user_id'];
-
-
-$sql = "SELECT ja.application_id, 
-               j.title AS job_title, 
-               CONCAT(u.first_name, ' ', u.last_name) AS applicant_name,
-               ja.status,
-               ja.applied_at
+if ($_SESSION['role'] === 'employer') {
+    
+    $stmt = $pdo->prepare("
+        SELECT ja.*, j.title, u.first_name, u.last_name
         FROM job_applications ja
         JOIN jobs j ON ja.job_id = j.job_id
         JOIN users u ON ja.user_id = u.user_id
         WHERE j.employer_id = ?
-        ORDER BY ja.applied_at DESC";
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute([$employer_id]);
-$applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        ORDER BY ja.applied_at DESC
+    ");
+    $stmt->execute([$_SESSION['user_id']]);
+    $applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    
+    $stmt = $pdo->prepare("
+        SELECT ja.*, j.title, u.first_name, u.last_name
+        FROM job_applications ja
+        JOIN jobs j ON ja.job_id = j.job_id
+        JOIN users u ON j.employer_id = u.user_id
+        WHERE ja.user_id = ?
+        ORDER BY ja.applied_at DESC
+    ");
+    $stmt->execute([$_SESSION['user_id']]);
+    $applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -36,53 +43,46 @@ $applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body class="bg-light">
 
-<div class="container my-5">
-    <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-body p-4">
-            <h3 class="text-primary mb-4">Job Applications</h3>
+<div class="container py-5">
+    <h2 class="text-center mb-4 text-primary">Job Applications</h2>
 
-            <?php if (empty($applications)): ?>
-                <div class="alert alert-info text-center rounded-3">
-                    No applications found for your jobs.
+    <?php if ($applications): ?>
+        <div class="row g-4">
+            <?php foreach ($applications as $app): ?>
+                <div class="card shadow-sm border-0 rounded-4 mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title"><?= htmlspecialchars($app['title']) ?></h5>
+                        <p class="text-muted mb-1">
+                            <strong>Applicant:</strong> <?= htmlspecialchars($app['first_name'] . ' ' . $app['last_name']) ?>
+                        </p>
+                        <p class="text-muted mb-1">
+                            <strong>Status:</strong> <?= htmlspecialchars($app['status']) ?>
+                        </p>
+                        <p class="text-muted mb-1">
+                            <strong>Applied At:</strong> <?= htmlspecialchars($app['applied_at']) ?>
+                        </p>
+                        <?php if (!empty($app['cover_letter'])): ?>
+                            <p class="mt-2"><strong>Cover Letter:</strong> <?= nl2br(htmlspecialchars($app['cover_letter'])) ?></p>
+                        <?php endif; ?>
+                        <?php if (!empty($app['resume_link'])): ?>
+                            <p><strong>Resume:</strong> <a href="<?= htmlspecialchars($app['resume_link']) ?>" target="_blank">View Resume</a></p>
+                        <?php endif; ?>
+
+                        <?php if ($_SESSION['role'] === 'employer'): ?>
+                            <div class="mt-2">
+                                <a href="update_status.php?id=<?= $app['application_id'] ?>&status=shortlisted" class="btn btn-success btn-sm">Shortlist</a>
+                                <a href="update_status.php?id=<?= $app['application_id'] ?>&status=rejected" class="btn btn-danger btn-sm">Reject</a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
-            <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-primary">
-                            <tr>
-                                <th>Job Title</th>
-                                <th>Applicant</th>
-                                <th>Status</th>
-                                <th>Date Applied</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($applications as $app): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($app['job_title']) ?></td>
-                                    <td><?= htmlspecialchars($app['applicant_name']) ?></td>
-                                    <td>
-                                        <?php
-                                            $badgeClass = match($app['status']) {
-                                                'pending' => 'bg-warning text-dark',
-                                                'shortlisted' => 'bg-info text-dark',
-                                                'rejected' => 'bg-danger',
-                                                'hired' => 'bg-success',
-                                                default => 'bg-secondary'
-                                            };
-                                        ?>
-                                        <span class="badge <?= $badgeClass ?>"><?= ucfirst($app['status']) ?></span>
-                                    </td>
-                                    <td><?= date('M d, Y', strtotime($app['applied_at'])) ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
+            <?php endforeach; ?>
         </div>
-    </div>
+    <?php else: ?>
+        <p class="text-center text-muted">No applications found.</p>
+    <?php endif; ?>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
