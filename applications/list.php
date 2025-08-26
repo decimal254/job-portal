@@ -76,7 +76,43 @@ if ($_SESSION['role'] === 'employer') {
                         <?php endif; ?>
                     </div>
                 </div>
+<<<<<<< HEAD
             <?php endforeach; ?>
+=======
+            <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Job Title</th>
+                                <th>Applicant</th>
+                                <th>Status</th>
+                                <th>Date Applied</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($applications as $app): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($app['job_title']) ?></td>
+                                    <td><?= htmlspecialchars($app['applicant_name']) ?></td>
+                                    <td>
+                                        <?php
+                                            $badgeClass = match($app['status']) {
+                                                'pending' => 'bg-warning text-dark',
+                                                'shortlisted' => 'bg-info text-dark',
+                                                'rejected' => 'bg-danger',
+                                                'hired' => 'bg-success',
+                                                default => 'bg-secondary'
+                                            };
+                                        ?>
+                                        <span class="badge <?= $badgeClass ?>"><?= ucfirst($app['status']) ?></span>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+>>>>>>> bfc5ab91bc889928b96fb5b852733cdd81f839bb
         </div>
     <?php else: ?>
         <p class="text-center text-muted">No applications found.</p>
