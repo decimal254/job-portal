@@ -57,10 +57,9 @@ try {
 </head>
 <body>
 
-
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-bold text-primary" href="index.php">JobPortal</a>
+        <a class="navbar-brand fw-bold text-primary" href="index.php">Job Portal</a>
         <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMain">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -73,6 +72,10 @@ try {
         </div>
     </div>
 </nav>
+<?php
+include __DIR__ . '/includes/header.php';
+
+?>
 
 
 <section class="hero">
@@ -149,11 +152,7 @@ try {
 </section>
 
 
-<footer class="bg-dark text-white py-4">
-    <div class="container text-center">
-        <p>&copy; <?= date('Y') ?> JobPortal. All Rights Reserved.</p>
-    </div>
-</footer>
+<?php include __DIR__ . '/includes/footer.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

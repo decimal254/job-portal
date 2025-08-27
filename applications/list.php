@@ -1,124 +1,67 @@
 <?php
-session_start();
-require_once '../config/db.php';
+require_once "../config/db.php";
 
-if (!isset($_SESSION['role'])) {
-    header("Location: ../auth/login.php");
-    exit;
-}
 
-if ($_SESSION['role'] === 'employer') {
-    
-    $stmt = $pdo->prepare("
-        SELECT ja.*, j.title, u.first_name, u.last_name
-        FROM job_applications ja
-        JOIN jobs j ON ja.job_id = j.job_id
-        JOIN users u ON ja.user_id = u.user_id
-        WHERE j.employer_id = ?
-        ORDER BY ja.applied_at DESC
-    ");
-    $stmt->execute([$_SESSION['user_id']]);
-    $applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} else {
-    
-    $stmt = $pdo->prepare("
-        SELECT ja.*, j.title, u.first_name, u.last_name
-        FROM job_applications ja
-        JOIN jobs j ON ja.job_id = j.job_id
-        JOIN users u ON j.employer_id = u.user_id
-        WHERE ja.user_id = ?
-        ORDER BY ja.applied_at DESC
-    ");
-    $stmt->execute([$_SESSION['user_id']]);
-    $applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+$stmt = $pdo->query("
+    SELECT 
+        ja.application_id,
+        ja.applied_at,
+        ja.status,
+        ja.cover_letter,
+        ja.resume_link,
+        j.title AS job_title,
+        u.first_name,
+        u.last_name,
+        u.email
+    FROM job_applications ja
+    JOIN jobs j ON ja.job_id = j.job_id
+    JOIN users u ON ja.user_id = u.user_id
+    ORDER BY ja.applied_at DESC
+");
+
+$applications = $stmt->fetchAll();
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Applications</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Applications List</title>
+    <link rel="stylesheet" href="../css/style.css">
 </head>
-<body class="bg-light">
+<body>
+    <h2>All Applications</h2>
 
-<div class="container py-5">
-    <h2 class="text-center mb-4 text-primary">Job Applications</h2>
-
-    <?php if ($applications): ?>
-        <div class="row g-4">
+    <?php if (count($applications) > 0): ?>
+        <table border="1">
+            <tr>
+                <th>ID</th>
+                <th>Job Title</th>
+                <th>Applicant</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Applied At</th>
+                <th>Resume</th>
+            </tr>
             <?php foreach ($applications as $app): ?>
-                <div class="card shadow-sm border-0 rounded-4 mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title"><?= htmlspecialchars($app['title']) ?></h5>
-                        <p class="text-muted mb-1">
-                            <strong>Applicant:</strong> <?= htmlspecialchars($app['first_name'] . ' ' . $app['last_name']) ?>
-                        </p>
-                        <p class="text-muted mb-1">
-                            <strong>Status:</strong> <?= htmlspecialchars($app['status']) ?>
-                        </p>
-                        <p class="text-muted mb-1">
-                            <strong>Applied At:</strong> <?= htmlspecialchars($app['applied_at']) ?>
-                        </p>
-                        <?php if (!empty($app['cover_letter'])): ?>
-                            <p class="mt-2"><strong>Cover Letter:</strong> <?= nl2br(htmlspecialchars($app['cover_letter'])) ?></p>
-                        <?php endif; ?>
+                <tr>
+                    <td><?= $app['application_id'] ?></td>
+                    <td><?= htmlspecialchars($app['job_title']) ?></td>
+                    <td><?= htmlspecialchars($app['first_name'] . " " . $app['last_name']) ?></td>
+                    <td><?= htmlspecialchars($app['email']) ?></td>
+                    <td><?= ucfirst($app['status']) ?></td>
+                    <td><?= $app['applied_at'] ?></td>
+                    <td>
                         <?php if (!empty($app['resume_link'])): ?>
-                            <p><strong>Resume:</strong> <a href="<?= htmlspecialchars($app['resume_link']) ?>" target="_blank">View Resume</a></p>
+                            <a href="<?= $app['resume_link'] ?>" target="_blank">View Resume</a>
+                        <?php else: ?>
+                          
                         <?php endif; ?>
-
-                        <?php if ($_SESSION['role'] === 'employer'): ?>
-                            <div class="mt-2">
-                                <a href="update_status.php?id=<?= $app['application_id'] ?>&status=shortlisted" class="btn btn-success btn-sm">Shortlist</a>
-                                <a href="update_status.php?id=<?= $app['application_id'] ?>&status=rejected" class="btn btn-danger btn-sm">Reject</a>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-<<<<<<< HEAD
+                    </td>
+                </tr>
             <?php endforeach; ?>
-=======
-            <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-primary">
-                            <tr>
-                                <th>Job Title</th>
-                                <th>Applicant</th>
-                                <th>Status</th>
-                                <th>Date Applied</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($applications as $app): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($app['job_title']) ?></td>
-                                    <td><?= htmlspecialchars($app['applicant_name']) ?></td>
-                                    <td>
-                                        <?php
-                                            $badgeClass = match($app['status']) {
-                                                'pending' => 'bg-warning text-dark',
-                                                'shortlisted' => 'bg-info text-dark',
-                                                'rejected' => 'bg-danger',
-                                                'hired' => 'bg-success',
-                                                default => 'bg-secondary'
-                                            };
-                                        ?>
-                                        <span class="badge <?= $badgeClass ?>"><?= ucfirst($app['status']) ?></span>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
->>>>>>> bfc5ab91bc889928b96fb5b852733cdd81f839bb
-        </div>
+        </table>
     <?php else: ?>
-        <p class="text-center text-muted">No applications found.</p>
+        <p>No applications found.</p>
     <?php endif; ?>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
