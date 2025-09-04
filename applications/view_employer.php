@@ -2,62 +2,91 @@
 session_start();
 require_once '../config/db.php';
 
-$application_id = $_GET['id'] ?? null;
 
-if (!$application_id) {
-    die("Invalid application.");
+$user_id = $_SESSION['user_id'] ?? null;
+$role    = $_SESSION['role'] ?? null;
+
+if (!$user_id || $role !== 'employer') {
+    header("Location: ../auth/login.php");
+    exit;
 }
 
-try {
-    $sql = "SELECT a.application_id, a.applied_at, a.status, a.cv_path,
-                   u.first_name, u.last_name, u.email, u.mobile_number,
-                   j.title AS job_title
-            FROM job_applications a
-            JOIN users u ON a.user_id = u.user_id
-            JOIN jobs j ON a.job_id = j.job_id
-            WHERE a.application_id = ?";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$application_id]);
-    $application = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$application) {
-        die("Invalid application.");
+$application_id = (int)($_GET['id'] ?? 0);
+$app = null;
+$error = '';
+
+if ($application_id === 0) {
+    $error = "Invalid application.";
+} else {
+    try {
+        
+        $sql = "SELECT ja.application_id, ja.applied_at, ja.status, ja.cv_path,
+                       j.title AS job_title,
+                       u.first_name, u.last_name, u.email
+                FROM job_applications ja
+                JOIN jobs j ON ja.job_id = j.job_id
+                JOIN users u ON ja.user_id = u.user_id
+                WHERE ja.application_id = ? AND j.employer_id = ?";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$application_id, $user_id]);
+        $app = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$app) {
+            $error = "Application not found or you are not authorized to view it.";
+        }
+    } catch (PDOException $e) {
+        $error = "Database Error: " . $e->getMessage();
     }
-} catch (PDOException $e) {
-    die("Error fetching application: " . $e->getMessage());
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Application Details</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
+
 <div class="container my-5">
-  <div class="card shadow p-4">
-    <h2 class="mb-4">Application Details</h2>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
 
-    <p><strong>Job Title:</strong> <?= htmlspecialchars($application['job_title']) ?></p>
-    <p><strong>Applicant:</strong> <?= htmlspecialchars($application['first_name'] . ' ' . $application['last_name']) ?></p>
-    <p><strong>Email:</strong> <?= htmlspecialchars($application['email']) ?></p>
-    <p><strong>Mobile:</strong> <?= htmlspecialchars($application['mobile_number']) ?></p>
-    <p><strong>Applied At:</strong> <?= htmlspecialchars($application['applied_at']) ?></p>
-    <p><strong>Status:</strong> <?= htmlspecialchars($application['status']) ?></p>
+            <?php if ($error): ?>
+                <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+                <a href="list.php" class="btn btn-secondary mt-3">Back to Applications</a>
+            <?php else: ?>
+                <div class="card p-4 shadow-sm">
+                    <h2 class="mb-4">Application Details</h2>
 
-    <?php if (!empty($application['cv_path'])): ?>
-      <p><strong>Resume:</strong> 
-        <a href="../<?= htmlspecialchars($application['cv_path']) ?>" target="_blank" class="btn btn-sm btn-primary">
-          View Resume
-        </a>
-      </p>
-    <?php else: ?>
-      <p class="text-danger"><em>No CV uploaded.</em></p>
-    <?php endif; ?>
+                    <p><strong>Job:</strong> <?= htmlspecialchars($app['job_title']) ?></p>
+                    <p><strong>Applicant:</strong> <?= htmlspecialchars($app['first_name'] . ' ' . $app['last_name']) ?></p>
+                    <p><strong>Email:</strong> <?= htmlspecialchars($app['email']) ?></p>
+                    <p><strong>Applied On:</strong> <?= date('M d, Y', strtotime($app['applied_at'])) ?></p>
+                    <p><strong>Status:</strong> 
+                        <span class="badge bg-primary"><?= ucfirst($app['status']) ?></span>
+                    </p>
 
-    <a href="view_employer.php" class="btn btn-secondary mt-3">Back to Applications</a>
-  </div>
+                    <?php if (!empty($app['cv_path'])): ?>
+                        <p><strong>Resume:</strong> 
+                            <a href="../<?= htmlspecialchars($app['cv_path']) ?>" 
+                               target="_blank" 
+                               class="btn btn-outline-primary btn-sm">View Resume</a>
+                        </p>
+                    <?php else: ?>
+                        <p class="text-muted">No resume uploaded.</p>
+                    <?php endif; ?>
+                </div>
+
+                <a href="list.php" class="btn btn-secondary mt-3">Back to Applications</a>
+            <?php endif; ?>
+
+        </div>
+    </div>
 </div>
+
 </body>
 </html>
