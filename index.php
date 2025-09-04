@@ -49,18 +49,38 @@ try {
   </div>
 </section>
 
-
 <section class="container py-5">
   <h2 class="text-center mb-4">Explore Popular Categories</h2>
   <div class="row g-3 text-center">
-    <div class="col-6 col-md-3"><div class="border p-3">IT & Software</div></div>
-    <div class="col-6 col-md-3"><div class="border p-3">Healthcare</div></div>
-    <div class="col-6 col-md-3"><div class="border p-3">Education</div></div>
-    <div class="col-6 col-md-3"><div class="border p-3">Engineering</div></div>
-    <div class="col-6 col-md-3"><div class="border p-3">Marketing</div></div>
-    <div class="col-6 col-md-3"><div class="border p-3">Finance</div></div>
-    <div class="col-6 col-md-3"><div class="border p-3">Design</div></div>
-    <div class="col-6 col-md-3"><div class="border p-3">Customer Service</div></div>
+
+    <div class="col-6 col-md-3">
+      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">IT and Software</a>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">Education</a>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">Healthcare</a>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">Engineering</a>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">Marketing</a>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">Finance</a>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">Design</a>
+    </div>
+
   </div>
 </section>
 
@@ -105,7 +125,7 @@ try {
       <a href="jobs/create.php" class="btn btn-outline-warning btn-lg m-2">Post a Job</a>
       <a href="auth/register_employer.php" class="btn btn-warning btn-lg m-2">Register as Employer</a>
 
-     
+
       <a href="auth/login.php" class="btn btn-outline-dark btn-lg m-2">Login</a>
     </div>
   </div>
