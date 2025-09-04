@@ -2,10 +2,9 @@
 session_start();
 require_once '../config/db.php';
 
-
 $title = isset($_GET['title']) ? trim($_GET['title']) : '';
 $location = isset($_GET['location']) ? trim($_GET['location']) : '';
-
+$category = isset($_GET['category']) ? trim($_GET['category']) : ''; // NEW
 
 $sql = "SELECT j.job_id, j.title, j.location, j.category, j.salary_range, j.description, 
                u.first_name, u.last_name, u.position 
@@ -23,9 +22,16 @@ if (!empty($title)) {
     $params[] = "%$title%";
 }
 
+
 if (!empty($location)) {
     $sql .= " AND j.location LIKE ?";
     $params[] = "%$location%";
+}
+
+
+if (!empty($category)) {
+    $sql .= " AND j.category = ?";
+    $params[] = $category;
 }
 
 $stmt = $pdo->prepare($sql);
@@ -47,17 +53,29 @@ $jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     
     <form action="search.php" method="get" class="row g-2 mb-4">
-        <div class="col-md-5">
+        <div class="col-md-4">
             <input type="text" name="title" value="<?= htmlspecialchars($title) ?>" class="form-control" placeholder="Job title or keyword">
         </div>
-        <div class="col-md-5">
+        <div class="col-md-4">
             <input type="text" name="location" value="<?= htmlspecialchars($location) ?>" class="form-control" placeholder="Location">
         </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Search</button>
+        <div class="col-md-3">
+            <select name="category" class="form-select">
+                <option value="">All Categories</option>
+                <option value="IT & Software" <?= $category === "IT & Software" ? "selected" : "" ?>>IT & Software</option>
+                <option value="Healthcare" <?= $category === "Healthcare" ? "selected" : "" ?>>Healthcare</option>
+                <option value="Finance" <?= $category === "Finance" ? "selected" : "" ?>>Finance</option>
+                <option value="Education" <?= $category === "Education" ? "selected" : "" ?>>Education</option>
+                <option value="Engineering" <?= $category === "Engineering" ? "selected" : "" ?>>Engineering</option>
+                <option value="Marketing" <?= $category === "Marketing" ? "selected" : "" ?>>Marketing</option>
+            </select>
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-primary w-100">Go</button>
         </div>
     </form>
 
+    
     <?php if (count($jobs) > 0): ?>
         <?php foreach ($jobs as $job): ?>
             <div class="card mb-3 shadow-sm">

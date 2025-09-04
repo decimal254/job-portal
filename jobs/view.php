@@ -29,6 +29,15 @@ if (!$job) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($job['title']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -60,7 +69,11 @@ if (!$job) {
 
             <div class="d-flex justify-content-between mt-4">
                 <a href="index.php" class="btn btn-outline-secondary">Back to Jobs</a>
-                <a href="../applications/list.php?job_id=<?= $job['job_id'] ?>" class="btn btn-primary">Apply Now</a>
+                
+                <form action="../Applications/submit_applications.php" method="post">
+                    <input type="hidden" name="job_id" value="<?= htmlspecialchars($job['job_id']) ?>">
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                </form>
 
             </div>
         </div>

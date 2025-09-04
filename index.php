@@ -1,9 +1,7 @@
 <?php
-session_start();
 require_once 'config/db.php';
 
 try {
-    
     $stmt = $pdo->prepare("
         SELECT job_id, title, location, category, salary_range, job_type, posted_at
         FROM jobs
@@ -17,73 +15,19 @@ try {
     error_log("DB error on homepage featured jobs: " . $e->getMessage());
     $jobs = [];
 }
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Portal - Find Your Next Job</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-        body { font-family: Arial, sans-serif; }
-        .hero {
-            height: 65vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-align: center;
-            position: relative;
-        }
-        .hero-overlay {
-            background: rgba(0, 0, 0, 0.5);
-            position: absolute; top:0; left:0; right:0; bottom:0;
-            bottom: 0;
-        
-        }
-        .hero-content {
-            position: relative; z-index: 2;
-        }
-        .category-card {
-            transition: 0.3s;
-            cursor: pointer;
-        }
-        .category-card:hover {
-            transform: translateY(-5px);
-        }
-        .job-card { min-height: 280px; }
-    </style>
-</head>
-<body>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold text-primary" href="index.php">Job Portal</a>
-        <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMain">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navMain">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a href="jobs/index.php" class="nav-link">Find Jobs</a></li>
-                <li class="nav-item"><a href="auth/login.php" class="nav-link">Login</a></li>
-                <li class="nav-item"><a href="auth/register_jobseeker.php" class="btn btn-primary ms-2">Sign Up</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
-<?php
-include __DIR__ . '/includes/header.php';
-
+$categories = ["IT & Software", "Healthcare", "Finance", "Education", "Engineering", "Marketing"];
 ?>
 
+<?php include 'includes/header.php'; ?>
+<?php include 'includes/navbar.php'; ?>
 
 <section class="hero">
-    <div class="hero-overlay"></div>
     <div class="container hero-content">
         <h1 class="display-5 fw-bold">Find Your Dream Job Today</h1>
-        <p class="lead mb-4">Search thousands of job listings across all industries</p>
-        <form action="applications/search.php" method="get" class="row g-2 justify-content-center">
+        <p class="lead mb-4">Search thousands of job listings across all industries.</p>
+        
+        <form action="jobs/list.php" method="get" class="row g-2 justify-content-center">
             <div class="col-md-4">
                 <input type="text" name="title" class="form-control form-control-lg" placeholder="Job title or keyword">
             </div>
@@ -97,28 +41,26 @@ include __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-
 <section class="py-5">
     <div class="container">
-        <h2 class="mb-4">Explore Popular Categories</h2>
-        <div class="row g-4">
-            <?php 
-            $categories = ["IT & Software", "Healthcare", "Finance", "Education", "Engineering", "Marketing"];
-            foreach ($categories as $cat): ?>
+        <h2 class="mb-4 text-center">Explore Popular Categories</h2>
+        <div class="row g-4 justify-content-center">
+            <?php foreach ($categories as $cat): ?>
                 <div class="col-md-4 col-lg-2">
-                    <div class="card category-card text-center p-3 shadow-sm h-100">
-                        <h6 class="fw-bold"><?= htmlspecialchars($cat) ?></h6>
-                    </div>
+                    <a href="jobs/list.php?category=<?= urlencode($cat) ?>" class="text-decoration-none">
+                        <div class="card category-card text-center p-3 shadow-sm h-100">
+                            <h6 class="fw-bold text-dark"><?= htmlspecialchars($cat) ?></h6>
+                        </div>
+                    </a>
                 </div>
             <?php endforeach; ?>
         </div>
     </div>
 </section>
 
-
 <section class="bg-light py-5">
     <div class="container">
-        <h2 class="mb-4">Featured Jobs</h2>
+        <h2 class="mb-4 text-center">Featured Jobs</h2>
         <div class="row g-4">
             <?php if (!empty($jobs)): ?>
                 <?php foreach ($jobs as $job): ?>
@@ -130,18 +72,25 @@ include __DIR__ . '/includes/header.php';
                                 <p class="mb-1"><strong>Category:</strong> <?= htmlspecialchars($job['category'] ?? '—') ?></p>
                                 <p class="mb-1"><strong>Salary:</strong> <?= htmlspecialchars($job['salary_range'] ?? '—') ?></p>
                                 <p class="mb-1"><strong>Type:</strong> <?= ucfirst(str_replace('_', ' ', $job['job_type'])) ?></p>
-                                <a href="jobs/view.php?id=<?= urlencode($job['job_id']) ?>" class="btn btn-outline-primary mt-2">View Job</a>
+                                <a href="jobs/view.php?id=<?= urlencode($job['job_id']) ?>" class="btn btn-outline-primary mt-auto">View Job</a>
                             </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <p>No jobs available right now.</p>
+                <p class="text-center">No jobs available right now.</p>
             <?php endif; ?>
         </div>
     </div>
 </section>
 
+<section class="py-5 text-center bg-secondary text-white">
+    <div class="container">
+        <h2 class="mb-3">Upload Your Resume</h2>
+        <p class="lead mb-4">Let employers find you faster — upload your resume today and get matched with the best opportunities.</p>
+        <a href="profile/upload_resume.php" class="btn btn-light btn-lg">Upload Resume</a>
+    </div>
+</section>
 
 <section class="py-5 text-center bg-primary text-white">
     <div class="container">
@@ -151,9 +100,4 @@ include __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-
-<?php include __DIR__ . '/includes/footer.php'; ?>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>

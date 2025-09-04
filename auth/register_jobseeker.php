@@ -1,15 +1,18 @@
 <?php
+session_start();
 require_once '../config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
-    $first            = $_POST['first_name'] ?? '';
-    $last             = $_POST['last_name'] ?? '';
-    $mobile           = $_POST['mobile_number'] ?? null;
-    $email            = $_POST['email'] ?? '';
-    $password         = password_hash($_POST['password'] ?? '', PASSWORD_DEFAULT);
+
+    $first            = trim($_POST['first_name'] ?? '');
+    $last             = trim($_POST['last_name'] ?? '');
+    $mobile           = trim($_POST['mobile_number'] ?? '');
+    $email            = trim($_POST['email'] ?? '');
+    $passwordPlain    = $_POST['password'] ?? '';
+    $password         = password_hash($passwordPlain, PASSWORD_DEFAULT);
     $code             = $_POST['country_code'] ?? '';
     $role             = 'jobseeker';
+
 
     $qualification    = $_POST['qualification'] ?? '';
     $experience       = $_POST['experience'] ?? '';
@@ -17,8 +20,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $desired_function = $_POST['desired_function'] ?? '';
     $availability     = $_POST['availability'] ?? '';
 
+
+
     try {
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        
+        $chk = $pdo->prepare("SELECT user_id FROM users WHERE email = ?");
+        $chk->execute([$email]);
+        if ($chk->fetch()) {
+            
+            header("Location: register_jobseeker.php?error=email_exists");
+            exit;
+        }
 
         
         $stmt = $pdo->prepare("
@@ -27,35 +41,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 country_code, mobile_number, role
             ) VALUES (?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([
-            $first, $last, $email, $password, $code, $mobile, $role
-        ]);
+        $stmt->execute([$first, $last, $email, $password, $code, $mobile, $role]);
 
-        $user_id = $pdo->lastInsertId();
+        $user_id = (int)$pdo->lastInsertId();
 
         
         $stmt2 = $pdo->prepare("
             INSERT INTO job_seekers (
-                user_id, qualification, experience,
-                current_function, desired_function, availability
+                user_id, qualification, experience, current_function, desired_function, availability
             ) VALUES (?, ?, ?, ?, ?, ?)
         ");
         $stmt2->execute([
-            $user_id, $qualification, $experience,
-            $current_function, $desired_function, $availability
+            $user_id, $qualification, $experience, $current_function, $desired_function, $availability
         ]);
 
-        echo "<div class='alert alert-success text-center'>
-                Registration successful as a Job Seeker!
-              </div>";
+        
+        header("Location: ../auth/login.php?registered=success");
+        exit;
 
     } catch (PDOException $e) {
+        
         echo "<div class='alert alert-danger text-center'>
                 Error: " . htmlspecialchars($e->getMessage()) . "
               </div>";
     }
 }
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="en">

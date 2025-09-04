@@ -1,67 +1,114 @@
 <?php
-require_once "../config/db.php";
+session_start();
+require_once '../config/db.php';
 
+$user_id = $_SESSION['user_id'] ?? null;
+$role    = $_SESSION['role'] ?? null;
 
-$stmt = $pdo->query("
-    SELECT 
-        ja.application_id,
-        ja.applied_at,
-        ja.status,
-        ja.cover_letter,
-        ja.resume_link,
-        j.title AS job_title,
-        u.first_name,
-        u.last_name,
-        u.email
-    FROM job_applications ja
-    JOIN jobs j ON ja.job_id = j.job_id
-    JOIN users u ON ja.user_id = u.user_id
-    ORDER BY ja.applied_at DESC
-");
+if (!$user_id) {
+    header("Location: ../auth/login.php");
+    exit;
+}
 
-$applications = $stmt->fetchAll();
+$applications = [];
+
+try {
+    if ($role === 'jobseeker') {
+        // Applications submitted BY this jobseeker
+        $sql = "SELECT ja.application_id, ja.applied_at, ja.status, 
+                       j.title, j.location
+                FROM job_applications ja
+                JOIN jobs j ON ja.job_id = j.job_id
+                WHERE ja.user_id = ?
+                ORDER BY ja.applied_at DESC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$user_id]);
+        $applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    } elseif ($role === 'employer') {
+        // Applications submitted TO this employer’s jobs
+        $sql = "SELECT ja.application_id, ja.applied_at, ja.status,
+                       u.first_name, u.last_name, j.title
+                FROM job_applications ja
+                JOIN jobs j ON ja.job_id = j.job_id
+                JOIN users u ON ja.user_id = u.user_id
+                WHERE j.employer_id = ?
+                ORDER BY ja.applied_at DESC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$user_id]);
+        $applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+} catch (PDOException $e) {
+    die("Error fetching applications: " . $e->getMessage());
+}
 ?>
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Applications List</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <meta charset="UTF-8">
+    <title>Job Applications</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h2>All Applications</h2>
+<body class="bg-light">
+<div class="container mt-5">
+    <h2 class="mb-4">
+        <?php echo ($role === 'jobseeker') ? "My Applications" : "Applications to My Jobs"; ?>
+    </h2>
 
-    <?php if (count($applications) > 0): ?>
-        <table border="1">
-            <tr>
-                <th>ID</th>
-                <th>Job Title</th>
-                <th>Applicant</th>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Applied At</th>
-                <th>Resume</th>
-            </tr>
-            <?php foreach ($applications as $app): ?>
-                <tr>
-                    <td><?= $app['application_id'] ?></td>
-                    <td><?= htmlspecialchars($app['job_title']) ?></td>
-                    <td><?= htmlspecialchars($app['first_name'] . " " . $app['last_name']) ?></td>
-                    <td><?= htmlspecialchars($app['email']) ?></td>
-                    <td><?= ucfirst($app['status']) ?></td>
-                    <td><?= $app['applied_at'] ?></td>
-                    <td>
-                        <?php if (!empty($app['resume_link'])): ?>
-                            <a href="<?= $app['resume_link'] ?>" target="_blank">View Resume</a>
-                        <?php else: ?>
-                          
-                        <?php endif; ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
+    <?php if (empty($applications)): ?>
+        <div class="alert alert-info">
+            <?php echo ($role === 'jobseeker') 
+                ? "You have not applied to any jobs yet." 
+                : "No one has applied to your jobs yet."; ?>
+        </div>
     <?php else: ?>
-        <p>No applications found.</p>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                <tr>
+                    <?php if ($role === 'jobseeker'): ?>
+                        <th>Job Title</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Applied On</th>
+                        <th>Action</th>
+                    <?php else: ?>
+                        <th>Applicant Name</th>
+                        <th>Job Title</th>
+                        <th>Status</th>
+                        <th>Applied On</th>
+                        <th>Action</th>
+                    <?php endif; ?>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($applications as $app): ?>
+                    <tr>
+                        <?php if ($role === 'jobseeker'): ?>
+                            <td><?= htmlspecialchars($app['title']) ?></td>
+                            <td><?= htmlspecialchars($app['location']) ?></td>
+                            <td><span class="badge bg-primary"><?= htmlspecialchars($app['status']) ?></span></td>
+                            <td><?= htmlspecialchars($app['applied_at']) ?></td>
+                            <td>
+                                <a href="view_employer.php?id=<?= $app['application_id'] ?>" 
+                                   class="btn btn-info btn-sm">View</a>
+                            </td>
+                        <?php else: ?>
+                            <td><?= htmlspecialchars($app['first_name'] . ' ' . $app['last_name']) ?></td>
+                            <td><?= htmlspecialchars($app['title']) ?></td>
+                            <td><span class="badge bg-primary"><?= htmlspecialchars($app['status']) ?></span></td>
+                            <td><?= htmlspecialchars($app['applied_at']) ?></td>
+                            <td>
+                                <a href="view_employer.php?id=<?= $app['application_id'] ?>" 
+                                   class="btn btn-info btn-sm">View</a>
+                            </td>
+                        <?php endif; ?>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     <?php endif; ?>
+</div>
 </body>
 </html>

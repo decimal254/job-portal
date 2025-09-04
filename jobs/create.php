@@ -3,7 +3,15 @@ session_start();
 require_once '../config/db.php';
 
 
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../auth/login.php');
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    
+    $employer_id = $_SESSION['user_id'];
+
     $title = trim($_POST['title']);
     $description = trim($_POST['description']);
     $requirements = trim($_POST['requirements']);
@@ -11,17 +19,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $category = trim($_POST['category']);
     $salary_range = trim($_POST['salary_range']);
     $job_type = trim($_POST['job_type']);
-    $employer_id = $_SESSION['user_id'];
 
-    $sql = "INSERT INTO jobs (employer_id, title, description, requirements, location, category, salary_range, job_type) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    $stmt = $pdo->prepare($sql);
-
-    if ($stmt->execute([$employer_id, $title, $description, $requirements, $location, $category, $salary_range, $job_type])) {
-        header("Location: index.php?success=1");
-        exit;
+    
+    if (empty($title) || empty($description) || empty($location) || empty($category)) {
+        $error = "Please fill out all required fields.";
     } else {
-        $error = "Error creating job. Please try again.";
+        try {
+            $sql = "INSERT INTO jobs (employer_id, title, description, requirements, location, category, salary_range, job_type) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+
+            if ($stmt->execute([$employer_id, $title, $description, $requirements, $location, $category, $salary_range, $job_type])) {
+                header("Location: index.php?success=1");
+                exit;
+            } else {
+                $error = "Error creating job. Please try again.";
+            }
+        } catch (PDOException $e) {
+            
+            
+            $error = "Database error: " . $e->getMessage();
+        }
     }
 }
 ?>
@@ -64,12 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">Location</label>
-                            <input type="text" name="location" class="form-control">
+                            <input type="text" name="location" class="form-control" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">Category</label>
-                            <input type="text" name="category" class="form-control">
+                            <input type="text" name="category" class="form-control" required>
                         </div>
 
                         <div class="mb-3">
