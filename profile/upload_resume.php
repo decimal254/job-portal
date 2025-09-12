@@ -11,6 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $message = "";
 
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['cv'])) {
     $allowedTypes = [
         'application/pdf',
@@ -21,20 +22,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['cv'])) {
 
     if ($file['error'] === UPLOAD_ERR_OK) {
         if (in_array($file['type'], $allowedTypes)) {
+
             
             $uploadDir = __DIR__ . '/../uploads/cvs/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
 
-            
+           
             $fileName = "cv_" . $user_id . "_" . time() . "_" . basename($file['name']);
             $filepath = $uploadDir . $fileName;
-            $dbpath   = "uploads/cvs/" . $fileName; 
+            $dbpath   = "uploads/cvs/" . $fileName;
 
             if (move_uploaded_file($file['tmp_name'], $filepath)) {
                 
-                $stmt = $pdo->prepare("UPDATE job_applications SET cv_path = ? WHERE user_id = ?");
+                $stmt = $pdo->prepare("UPDATE users SET cv_path = ? WHERE user_id = ?");
                 $stmt->execute([$dbpath, $user_id]);
 
                 $message = "<div class='alert alert-success'>Your resume has been uploaded successfully!</div>";

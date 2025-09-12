@@ -4,7 +4,7 @@ require_once '../config/db.php';
 
 $title = isset($_GET['title']) ? trim($_GET['title']) : '';
 $location = isset($_GET['location']) ? trim($_GET['location']) : '';
-$category = isset($_GET['category']) ? trim($_GET['category']) : ''; // NEW
+$category = isset($_GET['category']) ? trim($_GET['category']) : '';
 
 $sql = "SELECT j.job_id, j.title, j.location, j.category, j.salary_range, j.description, 
                u.first_name, u.last_name, u.position 
@@ -38,6 +38,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -94,6 +95,9 @@ $jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php else: ?>
         <div class="alert alert-warning">No jobs found matching your search.</div>
     <?php endif; ?>
+    <div class="mt-4">
+        <a href="../jobs/index.php" class="btn btn-secondary">Back to jobs</a>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

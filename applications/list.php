@@ -14,7 +14,7 @@ $applications = [];
 
 try {
     if ($role === 'jobseeker') {
-        // Applications submitted BY this jobseeker
+       
         $sql = "SELECT ja.application_id, ja.applied_at, ja.status, 
                        j.title, j.location
                 FROM job_applications ja
@@ -26,7 +26,7 @@ try {
         $applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     } elseif ($role === 'employer') {
-        // Applications submitted TO this employer’s jobs
+        
         $sql = "SELECT ja.application_id, ja.applied_at, ja.status,
                        u.first_name, u.last_name, j.title
                 FROM job_applications ja

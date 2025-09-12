@@ -4,6 +4,14 @@ require_once 'config/db.php';
 
 
 try {
+    $stmt = $pdo->query("SELECT DISTINCT category FROM jobs WHERE category IS NOT NULL ORDER BY category ASC");
+    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $categories = [];
+}
+
+
+try {
     $stmt = $pdo->prepare("
         SELECT job_id, title, location, category, job_type, posted_at
         FROM jobs
@@ -27,6 +35,7 @@ try {
 </head>
 <body class="bg-light">
 
+
 <?php include 'includes/navbar.php'; ?>
 
 
@@ -49,38 +58,22 @@ try {
   </div>
 </section>
 
+
 <section class="container py-5">
   <h2 class="text-center mb-4">Explore Popular Categories</h2>
   <div class="row g-3 text-center">
-
-    <div class="col-6 col-md-3">
-      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">IT and Software</a>
-    </div>
-
-    <div class="col-6 col-md-3">
-      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">Education</a>
-    </div>
-
-    <div class="col-6 col-md-3">
-      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">Healthcare</a>
-    </div>
-
-    <div class="col-6 col-md-3">
-      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">Engineering</a>
-    </div>
-
-    <div class="col-6 col-md-3">
-      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">Marketing</a>
-    </div>
-
-    <div class="col-6 col-md-3">
-      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">Finance</a>
-    </div>
-
-    <div class="col-6 col-md-3">
-      <a href="jobs/index.php" class="d-block border p-3 text-decoration-none text-dark">Design</a>
-    </div>
-
+    <?php if (!empty($categories)): ?>
+      <?php foreach ($categories as $cat): ?>
+        <div class="col-6 col-md-3">
+          <a href="jobs/index.php?category=<?= urlencode($cat['category']) ?>" 
+             class="d-block border p-3 text-decoration-none text-dark">
+            <?= htmlspecialchars($cat['category']) ?>
+          </a>
+        </div>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <p class="text-muted text-center">No categories available.</p>
+    <?php endif; ?>
   </div>
 </section>
 
@@ -114,18 +107,11 @@ try {
   <div class="container">
     <h2 class="mb-4">Get Started</h2>
     <div class="d-flex flex-wrap justify-content-center">
-     
       <a href="jobs/index.php" class="btn btn-outline-primary btn-lg m-2">Find Jobs</a>
-
-      
       <a href="dashboard/jobseeker.php#uploadCV" class="btn btn-outline-success btn-lg m-2">Upload Your CV</a>
       <a href="auth/register_jobseeker.php" class="btn btn-success btn-lg m-2">Register as Jobseeker</a>
-
-     
       <a href="jobs/create.php" class="btn btn-outline-warning btn-lg m-2">Post a Job</a>
       <a href="auth/register_employer.php" class="btn btn-warning btn-lg m-2">Register as Employer</a>
-
-
       <a href="auth/login.php" class="btn btn-outline-dark btn-lg m-2">Login</a>
     </div>
   </div>
@@ -133,6 +119,7 @@ try {
 
 
 <?php include 'includes/footer.php'; ?>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

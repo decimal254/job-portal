@@ -13,4 +13,12 @@ if (session_status() === PHP_SESSION_NONE) {
   <link rel="stylesheet" href="/css/style.css"> 
 </head>
 <body>
+   <header>
+        <nav>
+            <a href="/index.php">Home</a> 
+            <a href="/jobs/index.php">Jobs</a> 
+            <a href="/auth/login.php">Login</a> 
+            <a href="/auth/register.php">Sign Up</a>
+        </nav>
+    </header>
 

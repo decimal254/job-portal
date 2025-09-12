@@ -2,87 +2,101 @@
 session_start();
 require_once '../config/db.php';
 
+$title = $_GET['title'] ?? '';
+$location = $_GET['location'] ?? '';
+$category = $_GET['category'] ?? '';
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../auth/login.php");
-    exit;
+$sql = "
+    SELECT job_id, title, location, category, job_type, posted_at
+    FROM jobs
+    WHERE is_active = 1
+";
+
+$params = [];
+
+
+if (!empty($title)) {
+    $sql .= " AND title LIKE :title";
+    $params[':title'] = "%$title%";
 }
 
-$employer_id = $_SESSION['user_id'];
+if (!empty($location)) {
+    $sql .= " AND location LIKE :location";
+    $params[':location'] = "%$location%";
+}
 
+if (!empty($category)) {
+    $sql .= " AND category = :category";
+    $params[':category'] = $category;
+}
 
-$sql = "SELECT ja.application_id, ja.status, ja.applied_at,
-               j.title AS job_title,
-               CONCAT(u.first_name, ' ', u.last_name) AS applicant_name,
-               u.email AS applicant_email
-        FROM job_applications ja
-        JOIN jobs j ON ja.job_id = j.job_id
-        JOIN users u ON ja.user_id = u.user_id
-        WHERE j.employer_id = ?
-        ORDER BY ja.applied_at DESC";
-$stmt = $pdo->prepare($sql);
-$stmt->execute([$employer_id]);
-$applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$sql .= " ORDER BY posted_at DESC";
+
+try {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $jobs = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Applications</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Listings</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 
-<div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary">Job Applications</h2>
-    </div>
+<?php include '../includes/navbar.php'; ?>
 
-    <?php if (empty($applications)): ?>
-        <div class="alert alert-info">No applications found for your jobs.</div>
-    <?php else: ?>
-        <div class="table-responsive shadow-sm rounded-4">
-            <table class="table table-hover table-striped mb-0">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Job Title</th>
-                        <th>Applicant</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Date Applied</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($applications as $app): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($app['job_title']) ?></td>
-                            <td><?= htmlspecialchars($app['applicant_name']) ?></td>
-                            <td><?= htmlspecialchars($app['applicant_email']) ?></td>
-                            <td>
-                                <?php if ($app['status'] === 'pending'): ?>
-                                    <span class="badge bg-warning text-dark">Pending</span>
-                                <?php elseif ($app['status'] === 'shortlisted'): ?>
-                                    <span class="badge bg-info text-dark">Shortlisted</span>
-                                <?php elseif ($app['status'] === 'rejected'): ?>
-                                    <span class="badge bg-danger">Rejected</span>
-                                <?php elseif ($app['status'] === 'hired'): ?>
-                                    <span class="badge bg-success">Hired</span>
-                                <?php else: ?>
-                                    <span class="badge bg-secondary"><?= htmlspecialchars($app['status']) ?></span>
-                                <?php endif; ?>
-                            
-                            <td>
-                                <a href="view.php?id=<?= $app['application_id'] ?>" class="btn btn-sm btn-primary rounded-pill">View</a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+<div class="container py-5">
+  <h2 class="mb-4 text-center">Job Listings</h2>
+
+ 
+  <form action="index.php" method="get" class="row g-2 mb-4">
+    <div class="col-md-4">
+      <input type="text" name="title" value="<?= htmlspecialchars($title) ?>" 
+             class="form-control" placeholder="Job title or keyword">
+    </div>
+    <div class="col-md-3">
+      <input type="text" name="location" value="<?= htmlspecialchars($location) ?>" 
+             class="form-control" placeholder="Location">
+    </div>
+    <div class="col-md-3">
+      <input type="text" name="category" value="<?= htmlspecialchars($category) ?>" 
+             class="form-control" placeholder="Category">
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+  </form>
+
+  <div class="row g-4">
+    <?php if (!empty($jobs)): ?>
+      <?php foreach ($jobs as $job): ?>
+        <div class="col-md-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title"><?= htmlspecialchars($job['title']) ?></h5>
+              <p class="mb-1"><strong>Location:</strong> <?= htmlspecialchars($job['location']) ?></p>
+              <p class="mb-1"><strong>Category:</strong> <?= htmlspecialchars($job['category']) ?></p>
+              <p class="mb-1"><strong>Type:</strong> <?= ucfirst(str_replace('_',' ', $job['job_type'])) ?></p>
+              <small class="text-muted">Posted: <?= date('M d, Y', strtotime($job['posted_at'])) ?></small>
+              <a href="view.php?id=<?= $job['job_id'] ?>" class="btn btn-outline-primary mt-auto">View Job</a>
+            </div>
+          </div>
         </div>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <p class="text-center text-muted">No jobs found for your search.</p>
     <?php endif; ?>
+  </div>
 </div>
 
+<?php include '../includes/footer.php'; ?>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
