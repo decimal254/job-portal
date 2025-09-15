@@ -50,7 +50,7 @@ try {
 </head>
 <body class="bg-light">
 
-<?php include '../includes/navbar.php'; ?>
+<?php include '../includes/header.php'; ?>
 
 <div class="container py-5">
   <h2 class="mb-4 text-center">Job Listings</h2>

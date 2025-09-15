@@ -26,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     try {
-        
         $stmt = $pdo->prepare("
             INSERT INTO users (
                 first_name, last_name, email, password,
@@ -39,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
         $user_id = $pdo->lastInsertId();
 
-        
         $stmt2 = $pdo->prepare("
             INSERT INTO job_employers (
                 user_id, company_name, company_location,
@@ -59,7 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </div>";
 
     } catch (PDOException $e) {
-        
         $errorCode = $e->errorInfo[1] ?? null;
         if ($errorCode === 1062) {
             echo "<div class='alert alert-danger text-center'>
@@ -74,16 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register Employer</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+<?php include '../includes/header.php'; ?>
 
 <div class="container mt-5">
   <div class="row justify-content-center">
@@ -203,8 +191,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 </div>
 
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php include '../includes/footer.php'; ?>
